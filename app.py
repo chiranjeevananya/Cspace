@@ -1,6 +1,8 @@
 import re
+import joblib
+import numpy as np
 from pathlib import Path
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 import plotly.express as px
@@ -19,6 +21,53 @@ st.set_page_config(
 
 DATA_DIR = Path(__file__).parent
 
+MODEL_PATH = DATA_DIR / "models" / "demand_model.joblib"
+
+
+@st.cache_resource
+def load_demand_model():
+    """Load the previously trained DemandCast model."""
+    if not MODEL_PATH.exists():
+        return None
+
+    try:
+        return joblib.load(MODEL_PATH)
+    except Exception as error:
+        print(f"DemandCast model loading failed: {error}")
+        return None
+
+
+def predict_room_demand(selected_date, selected_hour):
+    """Predict hourly request volume using the saved model."""
+    artifact = load_demand_model()
+
+    if artifact is None:
+        return None
+
+    model = artifact["model"]
+    features = artifact["features"]
+
+    weekday = selected_date.weekday()
+
+    row = {
+        "hour": selected_hour,
+        "weekday": weekday,
+        "month": selected_date.month,
+        "day_of_month": selected_date.day,
+        "hour_sin": np.sin(2 * np.pi * selected_hour / 24),
+        "hour_cos": np.cos(2 * np.pi * selected_hour / 24),
+        "weekday_sin": np.sin(2 * np.pi * weekday / 7),
+        "weekday_cos": np.cos(2 * np.pi * weekday / 7),
+    }
+
+    prediction_input = pd.DataFrame(
+        [[row[feature] for feature in features]],
+        columns=features
+    )
+
+    prediction = float(model.predict(prediction_input)[0])
+
+    return max(0, prediction)
 
 # --------------------------------------------------
 # LOAD DATASETS
@@ -211,7 +260,74 @@ def recommend_rooms(
         )
 
     return result_df
+def find_alternative_slots(
+    selected_date,
+    start_hour,
+    duration,
+    group_size,
+    projector_required,
+    computers_required,
+    limit=3
+):
+    """Find feasible alternatives near the requested time."""
 
+    alternatives = []
+
+    # Search the same date first, then the following day.
+    candidate_dates = [
+        selected_date,
+        selected_date + timedelta(days=1)
+    ]
+
+    for candidate_date in candidate_dates:
+
+        for candidate_hour in range(8, 21):
+
+            if candidate_hour == start_hour and candidate_date == selected_date:
+                continue
+
+            if candidate_hour + duration > 24:
+                continue
+
+            rooms_available = recommend_rooms(
+                candidate_date,
+                candidate_hour,
+                duration,
+                group_size,
+                projector_required,
+                computers_required
+            )
+
+            if rooms_available.empty:
+                continue
+
+            predicted_demand = predict_room_demand(
+                candidate_date,
+                candidate_hour
+            )
+
+            alternatives.append({
+                "Date": candidate_date.isoformat(),
+                "Start Time": f"{candidate_hour:02d}:00",
+                "Available Rooms": len(rooms_available),
+                "Best Room": rooms_available.iloc[0]["Room ID"],
+                "Predicted Requests": (
+                    round(predicted_demand, 2)
+                    if predicted_demand is not None
+                    else None
+                )
+            })
+
+    alternatives.sort(
+        key=lambda item: (
+            item["Predicted Requests"]
+            if item["Predicted Requests"] is not None
+            else float("inf"),
+            -item["Available Rooms"]
+        )
+    )
+
+    return pd.DataFrame(alternatives[:limit])
 
 # --------------------------------------------------
 # SIDEBAR
