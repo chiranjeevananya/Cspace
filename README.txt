@@ -1,78 +1,79 @@
-# CSPACE — Campus Space Intelligence
+CSPACE — Campus Space Intelligence
 
-**Find Your Space. Predict Demand. Optimize Campus.**
+Find Your Space. Predict Demand. Optimize Campus.
 
 CSPACE is a campus-space discovery and planning prototype that helps students identify rooms matching their requirements and helps administrators explore historical room-request patterns. It combines rule-based room recommendations, schedule-conflict checks, interactive analytics, and an experimental machine-learning demand estimate in one Streamlit application.
 
-> **Prototype notice:** The supplied datasets are synthetic. CSPACE does not connect to live campus booking systems, and its availability checks are based only on the provided class schedules and event records. Demand forecasts are experimental and have not been validated against real campus data.
+Prototype notice: The supplied datasets are synthetic. CSPACE does not connect to live campus booking systems, and its availability checks are based only on the provided class schedules and event records. Demand forecasts are experimental and have not been validated against real campus data.
 
-## Contents
+Contents
 
-- [Problem](#problem)
-- [Solution](#solution)
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Datasets](#datasets)
-- [Machine-Learning Approach](#machine-learning-approach)
-- [Run Locally](#run-locally)
-- [Usage](#usage)
-- [Limitations and Responsible Use](#limitations-and-responsible-use)
-- [Future Improvements](#future-improvements)
+* Problem
+* Solution
+* Features
+* Technology Stack
+* Project Structure
+* Datasets
+* Machine-Learning Approach
+* Run Locally
+* Usage
+* Limitations and Responsible Use
+* Future Improvements
 
-## Problem
+Problem
 
 Finding an appropriate campus room can require checking several constraints at once: capacity, equipment, room type, date, time, and existing bookings or scheduled activities. A simple room list does not help users compare feasible alternatives, and historical request data can be difficult to interpret at a glance.
 
-## Solution
+Solution
 
 CSPACE brings room discovery and campus-space analytics into one interface. Users can specify room requirements, inspect candidate rooms, explore historical request patterns, and view an experimental demand estimate. The prototype is designed to demonstrate how demand insights could complement constraint-based room recommendations.
 
-## Features
+Features
 
-### 1. Smart Room Finder
-- Filters rooms by minimum capacity.
-- Supports projector and computer requirements.
-- Checks time overlaps against supplied recurring class schedules and dated events.
-- Ranks feasible rooms using a capacity-fit heuristic.
-- Explains why the top candidate matched the specified constraints.
+1. Smart Room Finder
 
-### 2. CSPACE Copilot
-- Accepts simple natural-language room requests.
-- Extracts group size, time range, and equipment requirements using Python regular expressions.
-- Uses the same room-recommendation and schedule-conflict logic as the Smart Room Finder.
-- Can display the requirements extracted from a query for easier debugging and demonstration.
+* Filters rooms by minimum capacity.
+* Supports projector and computer requirements.
+* Checks time overlaps against supplied recurring class schedules and dated events.
+* Ranks feasible rooms using a capacity-fit heuristic.
+* Explains why the top candidate matched the specified constraints.
 
-**Note:** Copilot is a rule-based assistant, not a large language model. Its parsing is limited to supported patterns; it may not correctly interpret every phrasing or relative-date expression.
+2. CSPACE Copilot
 
-### 3. Campus Analytics
-- Summarizes rooms, class records, room requests, and events.
-- Visualizes room-capacity distribution.
-- Shows request purpose and status distributions.
-- Displays a historical demand heatmap by weekday and hour.
-- Includes an experimental Random Forest Regression demand estimate.
-- Shows a preliminary supply-versus-request-count indicator.
+* Accepts simple natural-language room requests.
+* Extracts group size, time range, and equipment requirements using Python regular expressions.
+* Uses the same room-recommendation and schedule-conflict logic as the Smart Room Finder.
+* Can display the requirements extracted from a query for easier debugging and demonstration.
 
-### 4. Dataset Explorer
-- Displays sample rows for each dataset.
-- Shows dataset dimensions and missing-value counts.
+Note: Copilot is a rule-based assistant, not a large language model. Its parsing is limited to supported patterns; it may not correctly interpret every phrasing or relative-date expression.
 
-## Technology Stack
+3. Campus Analytics
 
-- **Python**
-- **Streamlit** — interactive web application
-- **Pandas / NumPy** — data preparation and feature engineering
-- **scikit-learn** — Random Forest Regression and evaluation metrics
-- **Plotly** — interactive charts
-- **Joblib** — saving and loading the trained model
+* Summarizes rooms, class records, room requests, and events.
+* Visualizes room-capacity distribution.
+* Shows request purpose and status distributions.
+* Displays a historical demand heatmap by weekday and hour.
+* Includes an experimental Random Forest Regression demand estimate.
+* Shows a preliminary supply-versus-request-count indicator.
+
+4. Dataset Explorer
+
+* Displays sample rows for each dataset.
+* Shows dataset dimensions and missing-value counts.
+
+Technology Stack
+
+* Python
+* Streamlit — interactive web application
+* Pandas / NumPy — data preparation and feature engineering
+* scikit-learn — Random Forest Regression and evaluation metrics
+* Plotly — interactive charts
+* Joblib — saving and loading the trained model
 
 No external LLM API key is required for the current rule-based Copilot or the local scikit-learn model.
 
-## Project Structure
+Project Structure
 
-The project is expected to have a structure similar to the following; filenames may differ in your local repository.
-
-```text
 Cspace/
 ├── app.py
 ├── rooms.csv
@@ -85,156 +86,116 @@ Cspace/
 │   └── demand_model.joblib
 ├── requirements.txt
 └── README.md
-```
 
-- `app.py` — Streamlit interface, room filtering, schedule checks, Copilot, and analytics.
-- `ml/train_model.py` — training and evaluation script for DemandCast.
-- `models/demand_model.joblib` — serialized model artifact generated by the training script.
-- CSV files — synthetic room, schedule, request, and event data.
+* app.py — Streamlit interface, room filtering, schedule checks, Copilot, and analytics.
+* ml/train_model.py — training and evaluation script for DemandCast.
+* models/demand_model.joblib — serialized model artifact generated by the training script.
+* CSV files — synthetic room, schedule, request, and event data.
 
-## Datasets
+Datasets
 
 The prototype uses four CSV datasets:
 
-| File | Purpose |
-|---|---|
-| `rooms.csv` | Room identifiers, locations, room types, capacities, and facilities |
-| `class_schedule.csv` | Recurring classes and their time intervals |
-| `room_requests.csv` | Historical/synthetic room requests, including dates, hours, purposes, and statuses |
-| `events.csv` | Dated events and their room/time information |
+File: rooms.csv
+Purpose: Room identifiers, locations, room types, capacities, and facilities
 
-The training script expects `room_requests.csv` to include `request_date`, `start_hour`, and `status`. Confirm the column names in your copy of the dataset before training. The current training target is the number of recorded request rows grouped by date and hour; it is not room occupancy or confirmed availability.
+File: class_schedule.csv
+Purpose: Recurring classes and their time intervals
 
-## Machine-Learning Approach
+File: room_requests.csv
+Purpose: Historical/synthetic room requests, including dates, hours, purposes, and statuses
 
-### Objective
+File: events.csv
+Purpose: Dated events and their room/time information
 
+The training script expects room_requests.csv to include request_date, start_hour, and status. Confirm the column names in your copy of the dataset before training. The current training target is the number of recorded request rows grouped by date and hour; it is not room occupancy or confirmed availability.
+
+Machine-Learning Approach
+
+Objective
 DemandCast estimates the number of room requests recorded for a date/hour context. It is an experimental regression task, not a booking or occupancy predictor.
 
-### Pipeline
+Pipeline
 
-1. Load `room_requests.csv`.
+1. Load room_requests.csv.
 2. Parse request dates and start hours and discard rows with unusable date/hour values.
 3. Aggregate recorded requests by calendar date and start hour.
 4. Engineer calendar features, including weekday, month, day of month, and cyclical encodings for hour and weekday.
 5. Split the aggregated observations chronologically into training and test sets.
-6. Train a `RandomForestRegressor`.
+6. Train a RandomForestRegressor.
 7. Compare test-set performance with a constant training-mean baseline using Mean Absolute Error (MAE) and Root Mean Squared Error (RMSE).
-8. Save the trained estimator and its feature list to `models/demand_model.joblib`.
+8. Save the trained estimator and its feature list to models/demand_model.joblib.
 
-### Reported evaluation
-
-In one recorded run on the supplied synthetic dataset:
-
-| Metric | Training-mean baseline | Random Forest |
-|---|---:|---:|
-| MAE | 1.3290 | 1.3986 |
-| RMSE | 1.6492 | 1.7530 |
+Reported Evaluation
+Training-mean baseline: MAE 1.3290, RMSE 1.6492
+Random Forest: MAE 1.3986, RMSE 1.7530
 
 In that run, the baseline performed better than the Random Forest. These values should be treated as a run-specific result, not a guarantee that another dataset or training run will produce the same metrics. The model should not be described as outperforming the baseline.
 
-### Important methodological caveats
+Important Methodological Caveats
 
-- The datasets are synthetic and do not establish real-world forecasting performance.
-- The current model uses calendar features only; it does not yet use lagged request counts or external event information as model inputs.
-- The chronological split is based on the order of aggregated date/hour rows. Inspect the data for date coverage and temporal gaps before interpreting results.
-- A calendar-only model trained on historical synthetic dates may be unreliable when queried for future dates outside the training distribution.
-- The shortage indicator compares historical request counts with an estimated count of rooms not occupied by recurring classes. It does not account for each request's capacity, duration, equipment, dated events, approval status, or cancellations. It is a screening indicator, not proof of a shortage.
-- Availability checks do not account for live bookings, maintenance closures, or other information absent from the supplied CSVs.
+* The datasets are synthetic and do not establish real-world forecasting performance.
+* The current model uses calendar features only; it does not yet use lagged request counts or external event information as model inputs.
+* The chronological split is based on the order of aggregated date/hour rows. Inspect the data for date coverage and temporal gaps before interpreting results.
+* A calendar-only model trained on historical synthetic dates may be unreliable when queried for future dates outside the training distribution.
+* The shortage indicator compares historical request counts with an estimated count of rooms not occupied by recurring classes. It does not account for each request's capacity, duration, equipment, dated events, approval status, or cancellations. It is a screening indicator, not proof of a shortage.
+* Availability checks do not account for live bookings, maintenance closures, or other information absent from the supplied CSVs.
 
-## Run Locally
+Run Locally
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/chiranjeevananya/Cspace.git
+1. Clone the repository:
+git clone [https://github.com/chiranjeevananya/Cspace.git](https://github.com/chiranjeevananya/Cspace.git)
 cd Cspace
-```
-
-### 2. Create and activate a virtual environment (recommended)
-
-**macOS / Linux**
-```bash
+2. Create and activate a virtual environment:
+macOS / Linux:
 python3 -m venv .venv
 source .venv/bin/activate
-```
 
-**Windows PowerShell**
-```powershell
+Windows PowerShell:
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-```
 
-### 3. Install dependencies
-
-If `requirements.txt` is present:
-
-```bash
+3. Install dependencies:
+If requirements.txt is present:
 pip install -r requirements.txt
-```
 
-Otherwise, install the direct dependencies:
-
-```bash
+Otherwise:
 pip install streamlit pandas numpy scikit-learn plotly joblib
-```
 
-### 4. Train the model
-
-Run from the project root:
-
-```bash
+4. Train the model:
 python3 ml/train_model.py
-```
-
-On Windows, use `python ml/train_model.py` if `python3` is not available.
-
-The script should print the baseline and Random Forest MAE/RMSE, feature importance, and the path where the model artifact was saved. If training fails, check that the required columns exist in `room_requests.csv`.
-
-### 5. Launch the application
-
-```bash
+5. Launch the application:
 streamlit run app.py
-```
 
-Streamlit will print a local URL in the terminal. Open that URL in your browser.
+Usage
 
-If the model artifact is not present, train it first. Do not commit credentials or private data to the repository.
-
-## Usage
-
-1. Open **Smart Room Finder**.
+1. Open Smart Room Finder.
 2. Select a date, group size, start time, duration, and required facilities.
-3. Click **Find Suitable Rooms** to view matching candidates.
-4. Open **CSPACE Copilot** and enter a request using a supported pattern, for example:
-   - `Find a room for 34 people with projector`
-   - `Find a room for 20 students from 2 PM to 4 PM`
-5. Open **Campus Analytics** to inspect historical charts and the experimental DemandCast estimate.
-6. Open **Dataset Explorer** to inspect the CSV files and missing values.
+3. Click Find Suitable Rooms to view matching candidates.
+4. Open CSPACE Copilot and enter a request using a supported pattern, for example:
+* "Find a room for 34 people with projector"
+* "Find a room for 20 students from 2 PM to 4 PM"
 
-The Copilot's natural-language parser is pattern-based. Check the detected requirements if a query produces unexpected results.
 
-## Limitations and Responsible Use
+5. Open Campus Analytics to inspect historical charts and the experimental DemandCast estimate.
+6. Open Dataset Explorer to inspect the CSV files and missing values.
 
-- This is a demonstration prototype, not a production booking service.
-- All room recommendations depend on the completeness and correctness of the supplied datasets.
-- A room shown as feasible is not reserved; users must confirm availability through an authoritative campus system.
-- Forecasts are experimental, based on synthetic data, and should not be used for operational decisions.
-- Do not interpret the demand estimate as confirmed room occupancy or probability of availability.
-- The rule-based assistant may misunderstand unsupported wording, dates, or time formats.
+Limitations and Responsible Use
 
-## Future Improvements
+* This is a demonstration prototype, not a production booking service.
+* All room recommendations depend on the completeness and correctness of the supplied datasets.
+* A room shown as feasible is not reserved; users must confirm availability through an authoritative campus system.
+* Forecasts are experimental, based on synthetic data, and should not be used for operational decisions.
+* Do not interpret the demand estimate as confirmed room occupancy or probability of availability.
+* The rule-based assistant may misunderstand unsupported wording, dates, or time formats.
 
-- Validate against authorized, real campus room and request records.
-- Add stronger temporal baselines and time-series-aware model evaluation.
-- Test lagged demand features without leaking future information.
-- Compare candidate regressors and report results across multiple time-based splits.
-- Improve natural-language parsing for relative dates, room types, and ambiguous times.
-- Integrate live booking and maintenance data, with appropriate access controls.
-- Rank alternatives using transparent, configurable preferences while preserving hard constraints.
-- Add automated tests for interval overlap, date parsing, feature extraction, and model inference.
+Future Improvements
 
----
-
-**CSPACE — Campus Space Intelligence**  
-*Find Your Space. Predict Demand. Optimize Campus.*
+* Validate against authorized, real campus room and request records.
+* Add stronger temporal baselines and time-series-aware model evaluation.
+* Test lagged demand features without leaking future information.
+* Compare candidate regressors and report results across multiple time-based splits.
+* Improve natural-language parsing for relative dates, room types, and ambiguous times.
+* Integrate live booking and maintenance data, with appropriate access controls.
+* Rank alternatives using transparent, configurable preferences while preserving hard constraints.
+* Add automated tests for interval overlap, date parsing, feature extraction, and model inference.
